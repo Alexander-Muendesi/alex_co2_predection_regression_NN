@@ -1,11 +1,18 @@
+import random
 import pandas as pd
 
 #For instances that have missing values, those input neurons will simply not activate for now
 class DataReader:
-    def __init__(self):
+    def __init__(self, random_number_generator):
         self.filename = "./src/dataset/data.csv"
         self.data = None
         self.prediction_data = None
+        self.test_data = None
+        self.train_data = None
+        self.validation_data = None
+        self.random_number_generator = random_number_generator# seeded random number generator
+        self.training_indexs = {}
+        self.validation_indexs = {}
 
     def readFile(self):
         data = pd.read_csv(self.filename)
@@ -16,6 +23,39 @@ class DataReader:
         self.data = data
         # print(self.data)
         self.generate_prediction_data()
+        self.generate_training_dataset()
+        self.generate_validation_set()
+    
+    #generates a validation set which consists of 10 % of the data
+    def generate_validation_set(self) :
+        upperbound = self.data.shape[0]
+        max_size = int(0.1 * self.data.shape[0])
+        data = []
+
+        while len(data) < max_size : 
+            index = self.random_number_generator.randrange(upperbound)
+            if(index not in self.training_indexs and index not in self.validation_indexs) : 
+                self.validation_indexs[index] = 'v'
+                data.append(self.data.iloc[index].copy())
+
+        data = pd.DataFrame(data, columns=self.data.columns)
+        self.validation_data = data
+
+    #generates a training set which consists of 70 % if the data
+    def generate_training_dataset(self) :
+        upperbound = self.data.shape[0]
+        max_size = int(0.7 * self.data.shape[0])
+        data = []
+
+        #randomly fill data with elements to make dataset
+        while len(data) < max_size:
+            index = self.random_number_generator.randrange(upperbound)
+            if(index not in self.training_indexs) :
+                self.training_indexs[index] = 't'
+                data.append(self.data.iloc[index].copy())
+
+        data = pd.DataFrame(data, columns=self.data.columns)
+        self.train_data = data    
 
     
     def generate_prediction_data(self):
@@ -48,7 +88,7 @@ class DataReader:
         #convert the list to a data frame
         data = pd.DataFrame(data, columns=south_africa_rows.columns)
         data.reset_index(drop=True,inplace=True)#reset the indexes in the data frame so first element has index of 0 again
-        print(data)
+        self.prediction_data = data
 
 #Arbitrary notes
 #iloc[] can be used to access a specific row by providing it an index

@@ -1,6 +1,6 @@
-import os
 from dataReader import DataReader
+import random
 
-print(os.getcwd())
-datareader = DataReader()
+random_generator = random.Random(0)
+datareader = DataReader(random_generator)
 datareader.readFile()
