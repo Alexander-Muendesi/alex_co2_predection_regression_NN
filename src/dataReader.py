@@ -13,6 +13,7 @@ class DataReader:
         self.random_number_generator = random_number_generator# seeded random number generator
         self.training_indexs = {}
         self.validation_indexs = {}
+        self.test_indexs = {}
 
     def readFile(self):
         data = pd.read_csv(self.filename)
@@ -24,10 +25,27 @@ class DataReader:
         # print(self.data)
         self.generate_prediction_data()
         self.generate_training_dataset()
-        self.generate_validation_set()
+        self.generate_validation_dataset()
+        self.generate_test_dataset()
+
+    # generates the test dataset
+    def generate_test_dataset(self) :
+        upperbound = self.data.shape[0]
+        max_size = int(0.2 * self.data.shape[0])
+        data = []
+
+        while len(data) < max_size :
+            index = self.random_number_generator.randrange(upperbound)
+            if index not in self.training_indexs and index not in self.validation_indexs and index not in self.test_indexs :
+                self.test_indexs[index] = 'test'
+                data.append(self.data.iloc[index].copy())
+
+        data = pd.DataFrame(data, columns=self.data.columns)
+        self.test_data = data
+        print(self.test_data)
     
     #generates a validation set which consists of 10 % of the data
-    def generate_validation_set(self) :
+    def generate_validation_dataset(self) :
         upperbound = self.data.shape[0]
         max_size = int(0.1 * self.data.shape[0])
         data = []
