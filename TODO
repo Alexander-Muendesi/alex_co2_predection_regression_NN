@@ -1,0 +1,3 @@
+- Calculate the z score of each row in your dataset. Any data point whose Z-score falls out of the 3rd standard deviation is an outlier
+- Normalize your data 
+- Decide whether you are going to delete the Entity column from the prediction data structure
