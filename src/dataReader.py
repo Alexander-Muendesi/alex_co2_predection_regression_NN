@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from scipy.stats import zscore
 
 # For instances that have missing values, those input neurons will simply not activate for now. Those instances are set to NaN
@@ -16,6 +17,8 @@ class DataReader:
         self.training_indexs = {}                   # keeps track of what indexes where used for the training dataset
         self.validation_indexs = {}                 # keeps track of what indexes where used for the validation dataset
         self.test_indexs = {}                       # Keeps track of what indexes where used for the test dataset
+        self.train_mean_values = None               # Keeps the mean values for the training dataset
+        self.train_std_dev_values = None            # Keeps track of the standard deviation values
 
     def readFile(self):
         data = pd.read_csv(self.filename)
@@ -29,10 +32,47 @@ class DataReader:
         self.remove_outliers()
 
         # generate the various datasets and place them in a DataFrame
-        # self.generate_prediction_data()
-        # self.generate_training_dataset()
-        # self.generate_validation_dataset()
-        # self.generate_test_dataset()
+        self.generate_prediction_data()
+        self.generate_training_dataset()
+        self.generate_validation_dataset()
+        self.generate_test_dataset()
+
+        # normalize the data
+        self.normalize_training_set()
+        self.normalize_validation_set()
+        self.normalize_test_set()
+        self.normalize_prediction_set()
+
+    def normalize_prediction_set(self) : 
+        nan_locations = self.prediction_data.isna()
+        self.prediction_data.fillna(0)
+        normalized_data = (self.prediction_data - self.train_mean_values) / self.train_std_dev_values
+        normalized_data[nan_locations] = np.nan
+        self.prediction_data = normalized_data
+
+    def normalize_test_set(self):
+        nan_locations = self.test_data.isna()
+        self.test_data.fillna(0)
+        normalized_data = (self.test_data - self.train_mean_values) / self.train_std_dev_values
+        normalized_data[nan_locations] = np.nan
+        self.test_data = normalized_data
+
+    def normalize_validation_set(self):
+        nan_locations = self.validation_data.isna()            # Keep track of where the NaN values are
+        self.validation_data.fillna(0)                         # Temporarily feel the NaN values with 0
+        normalized_data = (self.validation_data - self.train_mean_values) / self.train_std_dev_values
+        normalized_data[nan_locations] = np.nan                # Restore the NaN values
+        self.validation_data = normalized_data
+
+    def normalize_training_set(self):
+        mean_values = self.train_data.mean()
+        std_dev_values = self.train_data.std()
+
+        normalizd_data = (self.train_data - mean_values) / std_dev_values
+        self.train_data = normalizd_data
+
+        self.train_mean_values = mean_values
+        self.train_std_dev_values = std_dev_values
 
     # removes data points whose z score is more than 3 standard deviations 
     def remove_outliers(self) :
