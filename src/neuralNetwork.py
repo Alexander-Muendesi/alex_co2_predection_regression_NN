@@ -37,20 +37,16 @@ class NeuralNetwork(nn.Module):
         self.prediction_tensor_x = torch.tensor(prediction_data.values, dtype=torch.float32)
         self.prediction_tensor_y = torch.tensor(prediction_data_target.values, dtype=torch.float32).reshape(-1,1)
 
-        self.input_layer = nn.Linear(self.num_inputs,self.hidden_layer_sizes[0]) #input layer with the identity function
-        self.hidden_layers = nn.ModuleList()    # Create a list to hold the hidden layers
+        layers = []
 
-        for i in range(len(hidden_layer_sizes) - 1):
-            self.hidden_layers.append(nn.Linear(hidden_layer_sizes[i], hidden_layer_sizes[i+1]))
+        layers.append(nn.Linear(self.num_inputs,self.hidden_layer_sizes[0])) #input layer with the identity function
 
-        self.output_layer = nn.Linear(self.hidden_layer_sizes[-1], 1)   # 1 attribute is being predicted
+        for i in range(len(hidden_layer_sizes) - 1): #create the hiddden layers
+            layers.append(nn.Linear(hidden_layer_sizes[i], hidden_layer_sizes[i+1]))
+            layers.append(nn.ReLU())
+
+        layers.append(nn.Linear(self.hidden_layer_sizes[-1], 1))   # 1 attribute is being predicted
+        self.model = nn.Sequential(*layers)
 
     def forward(self,x):
-        x = self.input_layer(x) #pass input through the input layer
-
-        #pass the input through each hidden layer using the ReLu activation function
-        for layer in self.hidden_layers:
-            x = nn.functional.relu(layer(x))
-
-        x = self.output_layer(x) #linear activation function used for output layer
-        return x
+        return self.model(x)
