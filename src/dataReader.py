@@ -172,6 +172,18 @@ class DataReader:
 
         #TODO migh have to add "del data["Entity"]" here but not sure. Keep this in mind
         self.prediction_data = data
+    
+    def get_train_data(self):
+        return self.train_data
+    
+    def get_validation_data(self):
+        return self.validation_data
+    
+    def get_test_data(self):
+        return self.test_data
+    
+    def get_prediction_data(self):
+        return self.prediction_data
 
 #Arbitrary notes
 #iloc[] can be used to access a specific row by providing it an index
