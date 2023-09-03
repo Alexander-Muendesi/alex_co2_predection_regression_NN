@@ -26,15 +26,31 @@ class NeuralNetwork(nn.Module):
         del prediction_data["Value_co2_emissions_kt_by_country"]
 
         self.train_tensor_x = torch.tensor(train_data.values, dtype=torch.float32)              # x for the inputs
-        self.train_tensor_y = torch.tensor(train_data_target.values, dtype=torch.float32)       # y for the target value
+        self.train_tensor_y = torch.tensor(train_data_target.values, dtype=torch.float32).reshape(-1,1)       # y for the target value
 
         self.validation_tensor_x = torch.tensor(validation_data.values, dtype=torch.float32)
-        self.validation_tensor_y = torch.tensor(validation_data_target.values, dtype=torch.float32)
+        self.validation_tensor_y = torch.tensor(validation_data_target.values, dtype=torch.float32).reshape(-1,1)
 
         self.test_tensor_x = torch.tensor(test_data.values, dtype=torch.float32)
-        self.test_tensor_y = torch.tensor(test_data_target.values, dtype=torch.float32)
+        self.test_tensor_y = torch.tensor(test_data_target.values, dtype=torch.float32).reshape(-1,1)
         
         self.prediction_tensor_x = torch.tensor(prediction_data.values, dtype=torch.float32)
-        self.prediction_tensor_y = torch.tensor(prediction_data_target.values, dtype=torch.float32)
+        self.prediction_tensor_y = torch.tensor(prediction_data_target.values, dtype=torch.float32).reshape(-1,1)
 
-        print(self.test_tensor_y)
+        self.input_layer = nn.Linear(self.num_inputs,self.hidden_layer_sizes[0]) #input layer with the identity function
+        self.hidden_layers = nn.ModuleList()    # Create a list to hold the hidden layers
+
+        for i in range(len(hidden_layer_sizes) - 1):
+            self.hidden_layers.append(nn.Linear(hidden_layer_sizes[i], hidden_layer_sizes[i+1]))
+
+        self.output_layer = nn.Linear(self.hidden_layer_sizes[-1], 1)   # 1 attribute is being predicted
+
+    def forward(self,x):
+        x = self.input_layer(x) #pass input through the input layer
+
+        #pass the input through each hidden layer using the ReLu activation function
+        for layer in self.hidden_layers:
+            x = nn.functional.relu(layer(x))
+
+        x = self.output_layer(x) #linear activation function used for output layer
+        return x

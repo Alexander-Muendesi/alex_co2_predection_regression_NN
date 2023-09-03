@@ -49,7 +49,6 @@ class DataReader:
         normalized_data = (self.prediction_data - self.train_mean_values) / self.train_std_dev_values
         normalized_data[nan_locations] = np.nan
         self.prediction_data = normalized_data
-        self.prediction_data = self.prediction_data.fillna(self.prediction_data.mean())
 
     def normalize_test_set(self):
         nan_locations = self.test_data.isna()
@@ -57,7 +56,6 @@ class DataReader:
         normalized_data = (self.test_data - self.train_mean_values) / self.train_std_dev_values
         normalized_data[nan_locations] = np.nan
         self.test_data = normalized_data
-        self.test_data = self.test_data.fillna(self.test_data.mean())
 
     def normalize_validation_set(self):
         nan_locations = self.validation_data.isna()            # Keep track of where the NaN values are
@@ -65,7 +63,6 @@ class DataReader:
         normalized_data = (self.validation_data - self.train_mean_values) / self.train_std_dev_values
         normalized_data[nan_locations] = np.nan                # Restore the NaN values
         self.validation_data = normalized_data
-        self.validation_data = self.validation_data.fillna(self.validation_data.mean())
 
     def normalize_training_set(self):
         mean_values = self.train_data.mean()
@@ -76,7 +73,6 @@ class DataReader:
 
         self.train_mean_values = mean_values
         self.train_std_dev_values = std_dev_values
-        self.train_data = self.train_data.fillna(self.train_data.mean())
 
 
     # removes data points whose z score is more than 3 standard deviations 
@@ -110,6 +106,8 @@ class DataReader:
         data = pd.DataFrame(data, columns=self.data.columns)
         del data["Entity"]
         self.test_data = data
+        self.test_data = self.test_data.fillna(self.test_data.mean())
+
     
     #generates a validation set which consists of 10 % of the data
     def generate_validation_dataset(self) :
@@ -126,6 +124,8 @@ class DataReader:
         data = pd.DataFrame(data, columns=self.data.columns)
         del data["Entity"]
         self.validation_data = data
+        self.validation_data = self.validation_data.fillna(self.validation_data.mean())
+
 
     #generates a training set which consists of 70 % if the data
     def generate_training_dataset(self) :
@@ -143,6 +143,8 @@ class DataReader:
         data = pd.DataFrame(data, columns=self.data.columns)
         del data["Entity"]
         self.train_data = data    
+        self.train_data = self.train_data.fillna(self.train_data.mean())
+
 
     
     def generate_prediction_data(self):
@@ -179,6 +181,7 @@ class DataReader:
         #TODO migh have to add "del data["Entity"]" here but not sure. Keep this in mind
         del data["Entity"]
         self.prediction_data = data
+        self.prediction_data = self.prediction_data.fillna(self.prediction_data.mean())
         # print(self.prediction_data)
     
     def get_train_data(self):
