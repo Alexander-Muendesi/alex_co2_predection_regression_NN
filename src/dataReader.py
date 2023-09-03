@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from scipy.stats import zscore
 
-# For instances that have missing values, those input neurons will simply not activate for now. Those instances are set to NaN
+# For instances that have missing values, they are replaced with the mean value for that column
 # The Entity column has been removed as it is of little use. Instead will use latitude and longitude to indetift country
 # To detect outliers the z-score is calculated. Data points whose z score is out of 3 standard deviations are considered outliers
 class DataReader:
@@ -49,6 +49,7 @@ class DataReader:
         normalized_data = (self.prediction_data - self.train_mean_values) / self.train_std_dev_values
         normalized_data[nan_locations] = np.nan
         self.prediction_data = normalized_data
+        self.prediction_data = self.prediction_data.fillna(self.prediction_data.mean())
 
     def normalize_test_set(self):
         nan_locations = self.test_data.isna()
@@ -56,6 +57,7 @@ class DataReader:
         normalized_data = (self.test_data - self.train_mean_values) / self.train_std_dev_values
         normalized_data[nan_locations] = np.nan
         self.test_data = normalized_data
+        self.test_data = self.test_data.fillna(self.test_data.mean())
 
     def normalize_validation_set(self):
         nan_locations = self.validation_data.isna()            # Keep track of where the NaN values are
@@ -63,6 +65,7 @@ class DataReader:
         normalized_data = (self.validation_data - self.train_mean_values) / self.train_std_dev_values
         normalized_data[nan_locations] = np.nan                # Restore the NaN values
         self.validation_data = normalized_data
+        self.validation_data = self.validation_data.fillna(self.validation_data.mean())
 
     def normalize_training_set(self):
         mean_values = self.train_data.mean()
@@ -73,6 +76,8 @@ class DataReader:
 
         self.train_mean_values = mean_values
         self.train_std_dev_values = std_dev_values
+        self.train_data = self.train_data.fillna(self.train_data.mean())
+
 
     # removes data points whose z score is more than 3 standard deviations 
     def remove_outliers(self) :
@@ -87,6 +92,7 @@ class DataReader:
         indexes_without_anomalies = data.index[rows_without_anomalies]              
         filtered_data = self.data.loc[indexes_without_anomalies]                    # keep only the rows that do not have anomalies in them
         self.data = filtered_data
+
 
 
     # generates the test dataset
