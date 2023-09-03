@@ -171,7 +171,9 @@ class DataReader:
         data.reset_index(drop=True,inplace=True)#reset the indexes in the data frame so first element has index of 0 again
 
         #TODO migh have to add "del data["Entity"]" here but not sure. Keep this in mind
+        del data["Entity"]
         self.prediction_data = data
+        # print(self.prediction_data)
     
     def get_train_data(self):
         return self.train_data
@@ -184,6 +186,9 @@ class DataReader:
     
     def get_prediction_data(self):
         return self.prediction_data
+    
+    def get_num_inputs(self):
+        return self.data.shape[1]-1                 # -1 since it still contains the target column
 
 #Arbitrary notes
 #iloc[] can be used to access a specific row by providing it an index
