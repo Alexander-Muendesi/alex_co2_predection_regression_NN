@@ -197,7 +197,7 @@ class DataReader:
         return self.prediction_data
     
     def get_num_inputs(self):
-        return self.data.shape[1]-1                 # -1 since it still contains the target column
+        return self.data.shape[1]-2                 #must be 19
 
 #Arbitrary notes
 #iloc[] can be used to access a specific row by providing it an index
