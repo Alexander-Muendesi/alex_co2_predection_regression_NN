@@ -15,6 +15,7 @@ class NeuralNetwork(nn.Module):
         self.data_reader = data_reader
         self.num_inputs = data_reader.get_num_inputs()
         self.learning_rate = learning_rate
+        np.random.seed(2)
 
         train_data = data_reader.get_train_data().copy()
         train_data_target = train_data["Value_co2_emissions_kt_by_country"]
@@ -24,9 +25,9 @@ class NeuralNetwork(nn.Module):
         validation_data_target = validation_data["Value_co2_emissions_kt_by_country"]
         del validation_data["Value_co2_emissions_kt_by_country"]
 
-        test_data = data_reader.get_test_data().copy()
-        test_data_target = test_data["Value_co2_emissions_kt_by_country"]
-        del test_data["Value_co2_emissions_kt_by_country"]
+        # test_data = data_reader.get_test_data().copy()
+        # test_data_target = test_data["Value_co2_emissions_kt_by_country"]
+        # del test_data["Value_co2_emissions_kt_by_country"]
 
         prediction_data = data_reader.get_prediction_data().copy()
         prediction_data_target = prediction_data["Value_co2_emissions_kt_by_country"]
@@ -38,8 +39,8 @@ class NeuralNetwork(nn.Module):
         self.validation_tensor_x = torch.tensor(validation_data.values, dtype=torch.float32)
         self.validation_tensor_y = torch.tensor(validation_data_target.values, dtype=torch.float32).reshape(-1,1)
 
-        self.test_tensor_x = torch.tensor(test_data.values, dtype=torch.float32)
-        self.test_tensor_y = torch.tensor(test_data_target.values, dtype=torch.float32).reshape(-1,1)
+        # self.test_tensor_x = torch.tensor(test_data.values, dtype=torch.float32)
+        # self.test_tensor_y = torch.tensor(test_data_target.values, dtype=torch.float32).reshape(-1,1)
         
         self.prediction_tensor_x = torch.tensor(prediction_data.values, dtype=torch.float32)
         self.prediction_tensor_y = torch.tensor(prediction_data_target.values, dtype=torch.float32).reshape(-1,1)
@@ -72,7 +73,7 @@ class NeuralNetwork(nn.Module):
 
         for epoch in range(self.num_epochs):
             self.model.train()
-            with tqdm.tqdm(batch_start, unit="batch", mininterval=0, disable=False) as bar:
+            with tqdm.tqdm(batch_start, unit="batch", mininterval=0, disable=True) as bar:
                 bar.set_description(f"Epoch {epoch}")
                 for start in bar:
                     #select a batch
@@ -94,13 +95,20 @@ class NeuralNetwork(nn.Module):
             if mse < best_mse:
                 best_mse = mse
                 best_weights = copy.deepcopy(self.model.state_dict())
+
+            #shuffle the dataset
+            shuffled_indices = np.random.permutation(len(self.train_tensor_x))
+            self.train_tensor_x = self.train_tensor_x[shuffled_indices]
+            self.train_tensor_y = self.train_tensor_y[shuffled_indices]
             
         #restore the NN to the best results/weights
         self.model.load_state_dict(best_weights)
-        print("MSE: %.2f" % best_mse)
-        print("RMSE: %.2f" % np.sqrt(best_mse))
-        plt.plot(history)
-        plt.show()
+        # print("MSE: %.2f" % best_mse)
+        # print("RMSE: %.2f" % np.sqrt(best_mse))
+        # plt.plot(history)
+        # plt.show()
+
+        return best_mse
     
     # will be used to evalulate the validation and test sets
     def evaluate_model(self, x,y,loss_function):

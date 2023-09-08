@@ -35,12 +35,12 @@ class DataReader:
         self.generate_prediction_data()
         self.generate_training_dataset()
         self.generate_validation_dataset()
-        self.generate_test_dataset()
+        # self.generate_test_dataset()
 
         # normalize the data
         self.normalize_training_set()
         self.normalize_validation_set()
-        self.normalize_test_set()
+        # self.normalize_test_set()
         self.normalize_prediction_set()
 
     def normalize_prediction_set(self) : 
@@ -112,7 +112,7 @@ class DataReader:
     #generates a validation set which consists of 10 % of the data
     def generate_validation_dataset(self) :
         upperbound = self.data.shape[0]
-        max_size = int(0.1 * self.data.shape[0])
+        max_size = int(0.3 * self.data.shape[0])
         data = []
 
         while len(data) < max_size : 
