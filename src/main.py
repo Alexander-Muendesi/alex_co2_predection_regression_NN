@@ -27,7 +27,7 @@ while True:
     learning_rate = 0.00001 + (0.01-0.00001) * row.iloc[1] #range for learning rate: [0.00001,0.01]
     params = str(batch_size) + "," + str(learning_rate) + ","
 
-    random_number_generator = random.Random(2)
+    random_number_generator = random.Random(4)
     data_reader = DataReader(random_number_generator=random_number_generator)
     data_reader.readFile()
     hidden_layers = [100]
@@ -41,3 +41,4 @@ while True:
 
 #NB the max number of neurons you are allowed to have is 1000. Since they are 2171 we want to keep it in the ratio 1:2 to try prevent overfitting
 #max number of neurons per layer we will cap it at 100 for now..So 10 hidden layers max
+# best parameter values: batch size: 14.0 learning rate: 0.006887880859375 Average: 0.10796549320220947

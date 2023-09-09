@@ -15,7 +15,7 @@ class NeuralNetwork(nn.Module):
         self.data_reader = data_reader
         self.num_inputs = data_reader.get_num_inputs()
         self.learning_rate = learning_rate
-        np.random.seed(2)
+        np.random.seed(4)
 
         train_data = data_reader.get_train_data().copy()
         train_data_target = train_data["Value_co2_emissions_kt_by_country"]
