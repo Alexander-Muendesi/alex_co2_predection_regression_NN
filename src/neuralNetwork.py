@@ -15,7 +15,7 @@ class NeuralNetwork(nn.Module):
         self.data_reader = data_reader
         self.num_inputs = data_reader.get_num_inputs()
         self.learning_rate = learning_rate
-        np.random.seed(4)
+        np.random.seed(0)
 
         train_data = data_reader.get_train_data().copy()
         train_data_target = train_data["Value_co2_emissions_kt_by_country"]
@@ -59,9 +59,15 @@ class NeuralNetwork(nn.Module):
     def forward(self,x):
         return self.model(x)
     
+    def set_np_seed(self, seed):
+        np.random.seed(seed)
+    
     def train(self):
         loss_function = nn.MSELoss()        # loss function
-        optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        # optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        # optimizer = optim.ASGD(self.model.parameters(), lr=self.learning_rate)
+        optimizer = optim.Adagrad(self.model.parameters(), lr=self.learning_rate)
+        
 
         # code generates a tensor of indices that starts at 0, increments by batch_size at each step, and stops just before exceeding the length of train_tensor_x
         batch_start = torch.arange(0, len(self.train_tensor_x), self.batch_size)
