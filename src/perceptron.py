@@ -8,14 +8,13 @@ import torch.optim as optim
 
 
 class Perceptron(nn.Module):
-    def __init__(self,data_reader, num_epochs, batch_size, learning_rate, momentum):
+    def __init__(self,data_reader, num_epochs, batch_size, learning_rate):
         super(Perceptron, self).__init__()
         self.num_epochs = num_epochs
         self.batch_size = batch_size
         self.learning_rate = learning_rate
-        self.momentum = momentum
         self.num_inputs = data_reader.get_num_inputs()
-        np.random.seed(0)
+        np.random.seed(3)
 
         train_data = data_reader.get_train_data().copy()
         train_data_target = train_data["Value_co2_emissions_kt_by_country"]
@@ -50,7 +49,7 @@ class Perceptron(nn.Module):
 
     def train(self):
         loss_function = nn.MSELoss()
-        optimizer = optim.ASGD(lr=self.learning_rate)
+        optimizer = optim.ASGD(self.model.parameters(),lr=self.learning_rate)
 
         batch_start = torch.arange(0, len(self.train_tensor_x), self.batch_size)
 
@@ -100,6 +99,6 @@ class Perceptron(nn.Module):
         self.model.eval()
         with torch.no_grad():
             y_prediction = self.model(x)
-            print(y_prediction)
+            # print(y_prediction)
             mse = loss_function(y_prediction, y)
             return float(mse)
