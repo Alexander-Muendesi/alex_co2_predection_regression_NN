@@ -18,11 +18,20 @@ class NeuralNetwork(nn.Module):
         np.random.seed(0)
 
         train_data = data_reader.get_train_data().copy()
+        if train_data.isna().any().any():
+            print("there is nan in train_data")
         train_data_target = train_data["Value_co2_emissions_kt_by_country"]
+
+        if train_data_target.isna().any().any():
+            print("there is nan in train target")
         del train_data["Value_co2_emissions_kt_by_country"]
 
         validation_data = data_reader.get_validation_data().copy()
+        if validation_data.isna().any().any():
+            print("there is nan in validation_data")
         validation_data_target = validation_data["Value_co2_emissions_kt_by_country"]
+        if validation_data_target.isna().any().any():
+            print("there is nan in validation target")
         del validation_data["Value_co2_emissions_kt_by_country"]
 
         # test_data = data_reader.get_test_data().copy()
@@ -30,8 +39,13 @@ class NeuralNetwork(nn.Module):
         # del test_data["Value_co2_emissions_kt_by_country"]
 
         prediction_data = data_reader.get_prediction_data().copy()
+        if prediction_data.isna().any().any():
+            print("there is nan in prediction data")
         prediction_data_target = prediction_data["Value_co2_emissions_kt_by_country"]
+        if prediction_data_target.isna().any().any():
+            print("thre is nan in prediction target")
         del prediction_data["Value_co2_emissions_kt_by_country"]
+
 
         self.train_tensor_x = torch.tensor(train_data.values, dtype=torch.float32)              # x for the inputs
         self.train_tensor_y = torch.tensor(train_data_target.values, dtype=torch.float32).reshape(-1,1)       # y for the target value
@@ -65,8 +79,8 @@ class NeuralNetwork(nn.Module):
     def train(self):
         loss_function = nn.MSELoss()        # loss function
         # optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        # optimizer = optim.ASGD(self.model.parameters(), lr=self.learning_rate)
-        optimizer = optim.Adagrad(self.model.parameters(), lr=self.learning_rate)
+        optimizer = optim.ASGD(self.model.parameters(), lr=self.learning_rate)
+        # optimizer = optim.Adagrad(self.model.parameters(), lr=self.learning_rate)
         
 
         # code generates a tensor of indices that starts at 0, increments by batch_size at each step, and stops just before exceeding the length of train_tensor_x
@@ -114,12 +128,24 @@ class NeuralNetwork(nn.Module):
         # plt.plot(history)
         # plt.show()
 
+        self.test()
         return best_mse
+    
+    def test(self):
+        # self.model.eval()
+        with torch.no_grad():
+            # y_prediction = self.model(self.prediction_tensor_x)
+            y_prediction = self.model(self.prediction_tensor_x)
+            #undo the z-score normalization to get meaningful value
+            # temp = y_prediction[0].item() * self.data_reader.train_std_dev_values + self.data_reader.train_mean_values
+            print(y_prediction[0].item() * self.data_reader.train_std_dev_values["Value_co2_emissions_kt_by_country"] + self.data_reader.train_mean_values[["Value_co2_emissions_kt_by_country"]])
+
     
     # will be used to evalulate the validation and test sets
     def evaluate_model(self, x,y,loss_function):
         self.model.eval()
         with torch.no_grad():
             y_prediction = self.model(x)
+            # print(y_prediction)
             mse = loss_function(y_prediction, y)
             return float(mse)
