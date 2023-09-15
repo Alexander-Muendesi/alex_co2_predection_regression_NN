@@ -1,6 +1,7 @@
 from dataReader import DataReader
 from neuralNetwork import NeuralNetwork
 from sobolReader import SobolReader
+from perceptron import Perceptron
 import random
 
 # random_generator = random.Random(0)
@@ -15,32 +16,67 @@ import random
 # neuralNet.train()
 
 sobolReader = SobolReader()
-random_number_generator = random.Random(0)
+random_number_generator = random.Random(3)
 data_reader = DataReader(random_number_generator=random_number_generator)
 data_reader.readFile()
 
-counter = 439
-while counter < 1000:
+def test_NN():
     hidden_layers = [84]
     num_epochs = 100
     batch_size = 14
     learning_rate = 0.006887880859375
 
-    random_number_generator = random.Random(counter)
+    neuralNet = NeuralNetwork(hidden_layers, data_reader,num_epochs,batch_size,learning_rate)
+    neuralNet.train()
+    # neuralNet.test()
+
+def perform_30_runs_NN():
+    random_number_generator = random.Random(0)
     data_reader = DataReader(random_number_generator=random_number_generator)
     data_reader.readFile()
 
+    counter = 0
+    while counter < 30:
+        hidden_layers = [84]
+        num_epochs = 100
+        batch_size = 14
+        learning_rate = 0.006887880859375
 
-    neuralNet = NeuralNetwork(hidden_layers, data_reader,num_epochs,batch_size,learning_rate)
-    neuralNet.set_np_seed(counter)
-
-    result = str(counter) + ": " + str(neuralNet.train())
-    print(result)
-    counter += 1    
+        random_number_generator = random.Random(counter)
+        data_reader = DataReader(random_number_generator=random_number_generator)
+        data_reader.readFile()
 
 
+        neuralNet = NeuralNetwork(hidden_layers, data_reader,num_epochs,batch_size,learning_rate)
+        neuralNet.set_np_seed(counter)
+        neuralNet.train()
 
-def parameter_tuning():
+        result = str(counter) + ": " + str(neuralNet.test())
+        print(result)
+        counter += 1    
+
+def parameter_tuning_perceptron():
+    while True:
+        row = None
+
+        try:
+            row = sobolReader.getRow()
+        except Exception:
+            break
+
+        batch_size = int(5 + (150-5) * row.iloc[0])
+        learning_rate = 0.00001 + (0.01 - 0.00001) * row.iloc[1]
+
+        params = str(batch_size) + "," + str(learning_rate) + ","
+        num_epochs = 100
+
+        perceptron = Perceptron(data_reader,num_epochs,batch_size,learning_rate)
+
+        params += str(perceptron.train())
+        print(params)
+
+
+def parameter_tuning_NN():
     while True:
         row = None
         try:
@@ -61,6 +97,9 @@ def parameter_tuning():
         params += str(neuralNet.train())
         print(params)
 
+
+# parameter_tuning_perceptron()
+test_NN()
 
 #NB the max number of neurons you are allowed to have is 1000. Since they are 2171 we want to keep it in the ratio 1:2 to try prevent overfitting
 #max number of neurons per layer we will cap it at 100 for now..So 10 hidden layers max

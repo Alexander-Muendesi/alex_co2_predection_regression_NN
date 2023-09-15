@@ -1,51 +1,32 @@
-import copy
-import numpy as np
 import torch
 import torch.nn as nn
-import torch.optim as optim
+import numpy as np
 import tqdm
 import matplotlib.pyplot as plt
+import copy
+import torch.optim as optim
 
-class NeuralNetwork(nn.Module):
-    def __init__(self,hidden_layer_sizes,data_reader, num_epochs, batch_size, learning_rate):
-        super(NeuralNetwork, self).__init__()
+
+class Perceptron(nn.Module):
+    def __init__(self,data_reader, num_epochs, batch_size, learning_rate):
+        super(Perceptron, self).__init__()
         self.num_epochs = num_epochs
         self.batch_size = batch_size
-        self.hidden_layer_sizes = hidden_layer_sizes            # keeps the number of neurons for each hidden layer
-        self.data_reader = data_reader
-        self.num_inputs = data_reader.get_num_inputs()
         self.learning_rate = learning_rate
-        np.random.seed(0)
+        self.num_inputs = data_reader.get_num_inputs()
+        np.random.seed(3)
 
         train_data = data_reader.get_train_data().copy()
-        if train_data.isna().any().any():
-            print("there is nan in train_data")
         train_data_target = train_data["Value_co2_emissions_kt_by_country"]
-
-        if train_data_target.isna().any().any():
-            print("there is nan in train target")
         del train_data["Value_co2_emissions_kt_by_country"]
 
         validation_data = data_reader.get_validation_data().copy()
-        if validation_data.isna().any().any():
-            print("there is nan in validation_data")
         validation_data_target = validation_data["Value_co2_emissions_kt_by_country"]
-        if validation_data_target.isna().any().any():
-            print("there is nan in validation target")
         del validation_data["Value_co2_emissions_kt_by_country"]
 
-        # test_data = data_reader.get_test_data().copy()
-        # test_data_target = test_data["Value_co2_emissions_kt_by_country"]
-        # del test_data["Value_co2_emissions_kt_by_country"]
-
         prediction_data = data_reader.get_prediction_data().copy()
-        if prediction_data.isna().any().any():
-            print("there is nan in prediction data")
         prediction_data_target = prediction_data["Value_co2_emissions_kt_by_country"]
-        if prediction_data_target.isna().any().any():
-            print("thre is nan in prediction target")
         del prediction_data["Value_co2_emissions_kt_by_country"]
-
 
         self.train_tensor_x = torch.tensor(train_data.values, dtype=torch.float32)              # x for the inputs
         self.train_tensor_y = torch.tensor(train_data_target.values, dtype=torch.float32).reshape(-1,1)       # y for the target value
@@ -53,40 +34,25 @@ class NeuralNetwork(nn.Module):
         self.validation_tensor_x = torch.tensor(validation_data.values, dtype=torch.float32)
         self.validation_tensor_y = torch.tensor(validation_data_target.values, dtype=torch.float32).reshape(-1,1)
 
-        # self.test_tensor_x = torch.tensor(test_data.values, dtype=torch.float32)
-        # self.test_tensor_y = torch.tensor(test_data_target.values, dtype=torch.float32).reshape(-1,1)
-        
         self.prediction_tensor_x = torch.tensor(prediction_data.values, dtype=torch.float32)
         self.prediction_tensor_y = torch.tensor(prediction_data_target.values, dtype=torch.float32).reshape(-1,1)
 
-        layers = []
+        self.model = nn.Sequential(
+            nn.Linear(self.num_inputs,1)
+        )
 
-        layers.append(nn.Linear(self.num_inputs,self.hidden_layer_sizes[0])) #input layer with the identity function
-        
-        for i in range(len(hidden_layer_sizes) - 1): #create the hiddden layers
-            layers.append(nn.Linear(hidden_layer_sizes[i], hidden_layer_sizes[i+1]))
-            layers.append(nn.ReLU())
-
-        layers.append(nn.Linear(self.hidden_layer_sizes[-1], 1))   # 1 attribute is being predicted
-        self.model = nn.Sequential(*layers)
-
-    def forward(self,x):
+    def forward(self, x):
         return self.model(x)
     
     def set_np_seed(self, seed):
         np.random.seed(seed)
-    
-    def train(self):
-        loss_function = nn.MSELoss()        # loss function
-        # optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        optimizer = optim.ASGD(self.model.parameters(), lr=self.learning_rate)
-        # optimizer = optim.Adagrad(self.model.parameters(), lr=self.learning_rate)
-        
 
-        # code generates a tensor of indices that starts at 0, increments by batch_size at each step, and stops just before exceeding the length of train_tensor_x
+    def train(self):
+        loss_function = nn.MSELoss()
+        optimizer = optim.ASGD(self.model.parameters(),lr=self.learning_rate)
+
         batch_start = torch.arange(0, len(self.train_tensor_x), self.batch_size)
 
-        # keep track of the best model values
         best_mse = np.inf
         best_weights = None
         history = []
@@ -120,26 +86,13 @@ class NeuralNetwork(nn.Module):
             shuffled_indices = np.random.permutation(len(self.train_tensor_x))
             self.train_tensor_x = self.train_tensor_x[shuffled_indices]
             self.train_tensor_y = self.train_tensor_y[shuffled_indices]
-            
-        #restore the NN to the best results/weights
-        self.model.load_state_dict(best_weights)
-        # print("MSE: %.2f" % best_mse)
-        # print("RMSE: %.2f" % np.sqrt(best_mse))
-        # plt.plot(history)
-        # plt.show()
 
-        self.test()
+        self.model.load_state_dict(best_weights)
         return best_mse
     
     def test(self):
-        # self.model.eval()
-        with torch.no_grad():
-            # y_prediction = self.model(self.prediction_tensor_x)
-            y_prediction = self.model(self.prediction_tensor_x)
-            #undo the z-score normalization to get meaningful value
-            # temp = y_prediction[0].item() * self.data_reader.train_std_dev_values + self.data_reader.train_mean_values
-            print(y_prediction[0].item() * self.data_reader.train_std_dev_values["Value_co2_emissions_kt_by_country"] + self.data_reader.train_mean_values[["Value_co2_emissions_kt_by_country"]])
-
+        loss_function = nn.MSELoss()
+        return self.evaluate_model(self.validation_tensor_x,self.validation_tensor_y,loss_function)
     
     # will be used to evalulate the validation and test sets
     def evaluate_model(self, x,y,loss_function):
