@@ -2,7 +2,7 @@ import csv
 import numpy as np
 
 # Input and output file paths
-input_file = 'grid_combined.csv'
+input_file = 'perceptron_grid_combined.csv'
 output_file = 'output.csv'
 
 # Create dictionaries to store results for each (parameter1, parameter2) combination

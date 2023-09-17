@@ -16,7 +16,7 @@ import random
 # neuralNet.train()
 
 sobolReader = SobolReader()
-random_number_generator = random.Random(3)
+random_number_generator = random.Random(29)
 data_reader = DataReader(random_number_generator=random_number_generator)
 data_reader.readFile()
 
@@ -54,6 +54,18 @@ def perform_30_runs_NN():
         result = str(counter) + ": " + str(neuralNet.test())
         print(result)
         counter += 1    
+
+def best_optimizer_perceptron():
+    counter = 0
+    while counter < 1000:
+        batch_size = 5
+        learning_rate = 0.0099609765625
+        num_epochs = 100
+        perceptron = Perceptron(data_reader,num_epochs,batch_size,learning_rate)
+        perceptron.set_np_seed(counter)
+        print(perceptron.train())
+        counter += 1
+
 
 def parameter_tuning_perceptron():
     while True:
@@ -99,11 +111,12 @@ def parameter_tuning_NN():
 
 
 # parameter_tuning_perceptron()
-test_NN()
+# test_NN()
+best_optimizer_perceptron()
 
 #NB the max number of neurons you are allowed to have is 1000. Since they are 2171 we want to keep it in the ratio 1:2 to try prevent overfitting
 #max number of neurons per layer we will cap it at 100 for now..So 10 hidden layers max
-# best parameter values: batch size: 14.0 learning rate: 0.006887880859375 Number of hidden layer neurons: 84
+# best parameter values NN: batch size: 14.0 learning rate: 0.006887880859375 Number of hidden layer neurons: 84
 # Reason for using one hidden layer: universal approximation theorem says one hidden layer can approximate many functions that would typically require
 # multiple hidden layers in the NN
 
@@ -124,3 +137,5 @@ test_NN()
 # Average: 0.08530568008497358
 # Standard Deviation: 0.028516834976621358
 
+# PERCEPTRON
+# Best parameter values: batch size: 5, learning rate: 0.0099609765625
