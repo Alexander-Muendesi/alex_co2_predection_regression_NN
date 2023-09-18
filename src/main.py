@@ -58,6 +58,9 @@ def perform_30_runs_NN():
 def best_optimizer_perceptron():
     counter = 0
     while counter < 1000:
+        random_number_generator = random.Random(counter)
+        data_reader = DataReader(random_number_generator=random_number_generator)
+        data_reader.readFile()
         batch_size = 5
         learning_rate = 0.0099609765625
         num_epochs = 100

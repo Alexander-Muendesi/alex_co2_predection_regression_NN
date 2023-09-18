@@ -49,9 +49,9 @@ class Perceptron(nn.Module):
 
     def train(self):
         loss_function = nn.MSELoss()
-        # optimizer = optim.ASGD(self.model.parameters(),lr=self.learning_rate)
+        optimizer = optim.ASGD(self.model.parameters(),lr=self.learning_rate)
         # optimizer = optim.Adam(self.model.parameters(),lr=self.learning_rate)
-        optimizer = optim.Adagrad(self.model.parameters(),lr=self.learning_rate)
+        # optimizer = optim.Adagrad(self.model.parameters(),lr=self.learning_rate)
 
         batch_start = torch.arange(0, len(self.train_tensor_x), self.batch_size)
 
