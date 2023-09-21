@@ -3,7 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 # Output file path (the one containing parameter1, parameter2, average)
-output_file = 'output.csv'
+output_file = 'perceptron_output.csv'
 
 # Read the output CSV file into a pandas DataFrame
 df = pd.read_csv(output_file)
