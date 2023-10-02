@@ -5,6 +5,8 @@ import tqdm
 import matplotlib.pyplot as plt
 import copy
 import torch.optim as optim
+import pandas as pd
+
 
 
 class Perceptron(nn.Module):
@@ -14,6 +16,7 @@ class Perceptron(nn.Module):
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.num_inputs = data_reader.get_num_inputs()
+        self.data_reader = data_reader
         np.random.seed(29)
 
         train_data = data_reader.get_train_data().copy()
@@ -37,6 +40,30 @@ class Perceptron(nn.Module):
         self.prediction_tensor_x = torch.tensor(prediction_data.values, dtype=torch.float32)
         self.prediction_tensor_y = torch.tensor(prediction_data_target.values, dtype=torch.float32).reshape(-1,1)
 
+        #south africa data elements
+        # lattitude = (float(-30.559482) - self.data_reader.train_mean_values["Latitude"]) / self.data_reader.train_std_dev_values["Latitude"]
+        # longitude = (float(22.937506) - self.data_reader.train_mean_values["Longitude"]) / self.data_reader.train_std_dev_values["Longitude"]
+
+        #sri lanka
+        # lattitude = (float(7.873054) - self.data_reader.train_mean_values["Latitude"]) / self.data_reader.train_std_dev_values["Latitude"]
+        # longitude = (float(80.771797) - self.data_reader.train_mean_values["Longitude"]) / self.data_reader.train_std_dev_values["Longitude"]
+
+        #thailand
+        lattitude = (float(15.870032) - self.data_reader.train_mean_values["Latitude"]) / self.data_reader.train_std_dev_values["Latitude"]
+        longitude = (float(100.992541) - self.data_reader.train_mean_values["Longitude"]) / self.data_reader.train_std_dev_values["Longitude"]
+
+        raw_data = pd.concat([data_reader.get_train_data(),data_reader.get_validation_data()],ignore_index=True)
+        raw_data = raw_data.copy()
+        south_africa_train_target_data = raw_data["Value_co2_emissions_kt_by_country"]
+        del raw_data["Value_co2_emissions_kt_by_country"]
+
+        south_africa_mask = (raw_data["Latitude"] == lattitude) & (raw_data["Longitude"] == longitude)
+        south_africa_train_data = raw_data[south_africa_mask]
+        south_africa_train_target_data = south_africa_train_target_data[south_africa_mask]
+
+        self.south_africa_train_tensor_x = torch.tensor(south_africa_train_data.values, dtype=torch.float32)
+        self.south_africa_train_tensor_y = torch.tensor(south_africa_train_target_data.values, dtype=torch.float32)
+
         self.model = nn.Sequential(
             nn.Linear(self.num_inputs,1)
         )
@@ -56,6 +83,7 @@ class Perceptron(nn.Module):
         batch_start = torch.arange(0, len(self.train_tensor_x), self.batch_size)
 
         best_mse = np.inf
+        best_train_mse = np.inf
         best_weights = None
         history = []
 
@@ -77,6 +105,11 @@ class Perceptron(nn.Module):
                     optimizer.step()
                     # show the progress
                     bar.set_postfix(mse=float(loss))
+            # evaluate the training error
+            train_mse = self.evaluate_model(self.train_tensor_x,self.train_tensor_y, loss_function)
+            if train_mse < best_train_mse:
+                best_train_mse = train_mse
+            
             #evaluate the accuracy after each epoch on the validation set
             mse = self.evaluate_model(self.validation_tensor_x, self.validation_tensor_y, loss_function)
             history.append(mse)
@@ -90,11 +123,18 @@ class Perceptron(nn.Module):
             self.train_tensor_y = self.train_tensor_y[shuffled_indices]
 
         self.model.load_state_dict(best_weights)
+        print(best_train_mse)
+        # self.test()
         return best_mse
     
     def test(self):
-        loss_function = nn.MSELoss()
-        return self.evaluate_model(self.validation_tensor_x,self.validation_tensor_y,loss_function)
+        with torch.no_grad():
+            y_prediction = self.model(self.south_africa_train_tensor_x)
+            for i in range(len(self.south_africa_train_tensor_x)):
+                print(y_prediction[i].item() * self.data_reader.train_std_dev_values["Value_co2_emissions_kt_by_country"] + self.data_reader.train_mean_values[["Value_co2_emissions_kt_by_country"]])
+
+            # for i in range(len(self.prediction_tensor_x)):
+            #     print(y_prediction[i].item() * self.data_reader.train_std_dev_values["Value_co2_emissions_kt_by_country"] + self.data_reader.train_mean_values[["Value_co2_emissions_kt_by_country"]])
     
     # will be used to evalulate the validation and test sets
     def evaluate_model(self, x,y,loss_function):

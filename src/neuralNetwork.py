@@ -1,4 +1,5 @@
 import copy
+import pandas as pd
 import numpy as np
 import torch
 import torch.nn as nn
@@ -18,20 +19,13 @@ class NeuralNetwork(nn.Module):
         np.random.seed(0)
 
         train_data = data_reader.get_train_data().copy()
-        if train_data.isna().any().any():
-            print("there is nan in train_data")
         train_data_target = train_data["Value_co2_emissions_kt_by_country"]
 
-        if train_data_target.isna().any().any():
-            print("there is nan in train target")
         del train_data["Value_co2_emissions_kt_by_country"]
 
         validation_data = data_reader.get_validation_data().copy()
-        if validation_data.isna().any().any():
-            print("there is nan in validation_data")
         validation_data_target = validation_data["Value_co2_emissions_kt_by_country"]
-        if validation_data_target.isna().any().any():
-            print("there is nan in validation target")
+
         del validation_data["Value_co2_emissions_kt_by_country"]
 
         # test_data = data_reader.get_test_data().copy()
@@ -39,11 +33,9 @@ class NeuralNetwork(nn.Module):
         # del test_data["Value_co2_emissions_kt_by_country"]
 
         prediction_data = data_reader.get_prediction_data().copy()
-        if prediction_data.isna().any().any():
-            print("there is nan in prediction data")
+        
         prediction_data_target = prediction_data["Value_co2_emissions_kt_by_country"]
-        if prediction_data_target.isna().any().any():
-            print("thre is nan in prediction target")
+        
         del prediction_data["Value_co2_emissions_kt_by_country"]
 
 
@@ -70,6 +62,31 @@ class NeuralNetwork(nn.Module):
         layers.append(nn.Linear(self.hidden_layer_sizes[-1], 1))   # 1 attribute is being predicted
         self.model = nn.Sequential(*layers)
 
+        #south africa data elements
+        # lattitude = (float(-30.559482) - self.data_reader.train_mean_values["Latitude"]) / self.data_reader.train_std_dev_values["Latitude"]
+        # longitude = (float(22.937506) - self.data_reader.train_mean_values["Longitude"]) / self.data_reader.train_std_dev_values["Longitude"]
+
+        #sri lanka
+        lattitude = (float(7.873054) - self.data_reader.train_mean_values["Latitude"]) / self.data_reader.train_std_dev_values["Latitude"]
+        longitude = (float(80.771797) - self.data_reader.train_mean_values["Longitude"]) / self.data_reader.train_std_dev_values["Longitude"]
+
+        #thailand
+        lattitude = (float(15.870032) - self.data_reader.train_mean_values["Latitude"]) / self.data_reader.train_std_dev_values["Latitude"]
+        longitude = (float(100.992541) - self.data_reader.train_mean_values["Longitude"]) / self.data_reader.train_std_dev_values["Longitude"]
+
+
+        raw_data = pd.concat([data_reader.get_train_data(),data_reader.get_validation_data()],ignore_index=True)
+        raw_data = raw_data.copy()
+        south_africa_train_target_data = raw_data["Value_co2_emissions_kt_by_country"]
+        del raw_data["Value_co2_emissions_kt_by_country"]
+
+        south_africa_mask = (raw_data["Latitude"] == lattitude) & (raw_data["Longitude"] == longitude)
+        south_africa_train_data = raw_data[south_africa_mask]
+        south_africa_train_target_data = south_africa_train_target_data[south_africa_mask]
+
+        self.south_africa_train_tensor_x = torch.tensor(south_africa_train_data.values, dtype=torch.float32)
+        self.south_africa_train_tensor_y = torch.tensor(south_africa_train_target_data.values, dtype=torch.float32)
+
     def forward(self,x):
         return self.model(x)
     
@@ -87,7 +104,8 @@ class NeuralNetwork(nn.Module):
         batch_start = torch.arange(0, len(self.train_tensor_x), self.batch_size)
 
         # keep track of the best model values
-        best_mse = np.inf
+        best_mse = np.inf # the validation error
+        best_train_mse = np.inf
         best_weights = None
         history = []
 
@@ -109,6 +127,10 @@ class NeuralNetwork(nn.Module):
                     optimizer.step()
                     # show the progress
                     bar.set_postfix(mse=float(loss))
+            # evaluate the training error
+            train_mse = self.evaluate_model(self.train_tensor_x,self.train_tensor_y, loss_function)
+            if train_mse < best_train_mse:
+                best_train_mse = train_mse
             #evaluate the accuracy after each epoch on the validation set
             mse = self.evaluate_model(self.validation_tensor_x, self.validation_tensor_y, loss_function)
             history.append(mse)
@@ -129,16 +151,21 @@ class NeuralNetwork(nn.Module):
         # plt.show()
 
         self.test()
+        # print(best_train_mse)
         return best_mse
     
     def test(self):
         # self.model.eval()
         with torch.no_grad():
             # y_prediction = self.model(self.prediction_tensor_x)
-            y_prediction = self.model(self.prediction_tensor_x)
+            y_prediction = self.model(self.south_africa_train_tensor_x)
             #undo the z-score normalization to get meaningful value
             # temp = y_prediction[0].item() * self.data_reader.train_std_dev_values + self.data_reader.train_mean_values
-            print(y_prediction[0].item() * self.data_reader.train_std_dev_values["Value_co2_emissions_kt_by_country"] + self.data_reader.train_mean_values[["Value_co2_emissions_kt_by_country"]])
+            # for i in range(15):
+
+            for i in range(len(self.south_africa_train_tensor_x)):
+                print(y_prediction[i].item() * self.data_reader.train_std_dev_values["Value_co2_emissions_kt_by_country"] + self.data_reader.train_mean_values[["Value_co2_emissions_kt_by_country"]])
+
 
     
     # will be used to evalulate the validation and test sets

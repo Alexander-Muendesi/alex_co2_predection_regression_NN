@@ -30,6 +30,45 @@ def test_NN():
     neuralNet.train()
     # neuralNet.test()
 
+def test_NN_30_runs():
+    hidden_layers = [84]
+    num_epochs = 100
+    batch_size = 14
+    learning_rate = 0.006887880859375
+
+    for i in range(30):
+        random_number_generator = random.Random(i)
+        data_reader = DataReader(random_number_generator=random_number_generator)
+        data_reader.readFile()
+
+        neuralNet = NeuralNetwork(hidden_layers, data_reader,num_epochs,batch_size,learning_rate)
+        neuralNet.set_np_seed(i)
+        neuralNet.train()
+        # print("\n")
+
+def test_perceptron_30_runs():
+    batch_size = 5
+    learning_rate = 0.0099609765625
+    num_epochs = 100
+
+    for i in range(30):
+        random_number_generator = random.Random(i)
+        data_reader = DataReader(random_number_generator=random_number_generator)
+        data_reader.readFile()
+
+        perceptron = Perceptron(data_reader,num_epochs,batch_size,learning_rate)
+        perceptron.set_np_seed(i)
+        perceptron.train()
+        # print("\n")
+
+def test_perceptron():
+    batch_size = 5
+    learning_rate = 0.0099609765625
+    num_epochs = 100
+    perceptron = Perceptron(data_reader,num_epochs,batch_size,learning_rate)
+    perceptron.train()
+
+
 def perform_30_runs_NN():
     random_number_generator = random.Random(0)
     data_reader = DataReader(random_number_generator=random_number_generator)
@@ -114,8 +153,12 @@ def parameter_tuning_NN():
 
 
 # parameter_tuning_perceptron()
-# test_NN()
-best_optimizer_perceptron()
+# test_perceptron_30_runs()
+test_NN_30_runs()
+# best_optimizer_perceptron()
+# test_NN_30_runs()
+# test_perceptron_30_runs()
+# test_perceptron()
 
 #NB the max number of neurons you are allowed to have is 1000. Since they are 2171 we want to keep it in the ratio 1:2 to try prevent overfitting
 #max number of neurons per layer we will cap it at 100 for now..So 10 hidden layers max
@@ -142,3 +185,15 @@ best_optimizer_perceptron()
 
 # PERCEPTRON
 # Best parameter values: batch size: 5, learning rate: 0.0099609765625
+
+# Adagrad performance
+# Average: 0.12133822592720389
+# Standard Deviation: 0.035902405437841775
+
+# Adam performance
+# Average: 0.08492258883267641
+# Standard Deviation: 0.028231214261428494
+
+# ASGD performance
+# Average: 0.08491530264168978
+# Standard Deviation: 0.028232801613489254

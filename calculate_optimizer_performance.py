@@ -2,23 +2,21 @@ import statistics
 
 # Initialize variables to calculate average and store values
 values = []
-total = 0
 
-# Read the file and extract values after the colon
-with open('ASGD_run.txt', 'r') as file:
+# Read the file and extract values
+with open('perceptron/ASGD_perceptron_runs.txt', 'r') as file:
     for line in file:
-        parts = line.strip().split(': ')
-        if len(parts) == 2:
-            value = float(parts[1])
+        try:
+            value = float(line.strip())
             values.append(value)
-            total += value
-            print(value)
+        except ValueError:
+            print(f"Skipping line: {line.strip()} (Not a valid float)")
 
 # Calculate and print the average and standard deviation
 if values:
-    average = total / len(values)
+    average = statistics.mean(values)
     std_deviation = statistics.stdev(values)
     print(f"Average: {average}")
     print(f"Standard Deviation: {std_deviation}")
 else:
-    print("No data found in the file.")
+    print("No valid data found in the file.")
