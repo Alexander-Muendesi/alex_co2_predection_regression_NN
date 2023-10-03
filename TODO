@@ -1,2 +1,0 @@
-- Remember that you prediction value is still in the training set and all the other sets. Make sure to exclude it when passing inputs to NN
-- Decide whether you are going to delete the Entity column from the prediction data structure

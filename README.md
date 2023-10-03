@@ -1,1 +1,1 @@
-# alex_co2_predection_regression_NN
+A neural network created with pytorch to predict CO2 emissions. Based on the following dataset: https://www.kaggle.com/datasets/anshtanwar/global-data-on-sustainable-energy 
